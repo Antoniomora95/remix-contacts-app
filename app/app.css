@@ -55,6 +55,9 @@ button:active {
   box-shadow: 0 0px 1px hsla(0, 0%, 0%, 0.4);
   transform: translateY(1px);
 }
+button[type="submit"]:hover {
+  cursor: pointer;
+}
 
 #contact h1 {
   display: flex;
@@ -188,8 +191,8 @@ body {
 }
 
 #sidebar nav a span {
-  float: right;
   color: #eeb004;
+  margin-left: auto;
 }
 #sidebar nav a.active span {
   color: inherit;
@@ -215,7 +218,7 @@ i {
 #sidebar nav a {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content:flex-start;
   overflow: hidden;
 
   white-space: pre;
@@ -238,7 +241,7 @@ i {
 
 #sidebar nav a.pending {
   animation: progress 2s infinite ease-in-out;
-  animation-delay: 200ms;
+  animation-delay: 50ms;
 }
 
 @keyframes progress {
