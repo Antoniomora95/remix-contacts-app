@@ -1,5 +1,9 @@
+import { redirect } from "@remix-run/node";
 
 
+export const loader = async () => {
+  return redirect('/contacts');
+}
 export default function Index() {
   return (
     <p id="index-page">

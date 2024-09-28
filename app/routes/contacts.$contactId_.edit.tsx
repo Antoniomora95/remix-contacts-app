@@ -36,8 +36,6 @@ export default function EditContact() {
 
     const isLoading = navigation.state === "submitting" || navigation.state === "loading";
 
-    console.log(navigation, 'navigation..');
-
     return(
         <Form key={contact.id} id="contact-form" method="post">
             <p>
