@@ -3,8 +3,10 @@ import invariant from "tiny-invariant";
 import { Form, useLoaderData, useFetcher } from "@remix-run/react";
 import type { FunctionComponent } from "react";
 import { getContact, updateContact, type ContactRecord } from '../data';
+import { requireUserId } from '~/services/auth.server';
 
-export const loader = async ({params}: LoaderFunctionArgs) => {
+export const loader = async ({params, request}: LoaderFunctionArgs) => {
+  await requireUserId(request, "/login");
   invariant(params.contactId, "Missing contactId param");
   const contact = await getContact(params.contactId);
 

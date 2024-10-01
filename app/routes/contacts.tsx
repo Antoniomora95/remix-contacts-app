@@ -12,16 +12,14 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import { ContactRecord, createEmptyContact, getContacts } from '~/data';
 import { Logout } from '~/components/logout';
 import { requireUserId } from '~/services/auth.server';
-import dbClient from '~/db/db';
 
 export const loader = async (args: LoaderFunctionArgs) => {
-    const userId = await requireUserId(args.request, "/login");
-    const user = await dbClient.user.findUnique({where: {id: userId}});
+    await requireUserId(args.request, "/login");
 
     const url = new URL(args.request.url);
     const query = url.searchParams.get("q");
     const contacts = await getContacts(query);
-    return json({ contacts, query, user });
+    return json({ contacts, query });
 }
 
 export const action = async () => {
@@ -30,7 +28,7 @@ export const action = async () => {
 }
 
 export default function Contacts() {
-    const { contacts, query, user} = useLoaderData<typeof loader>();
+    const { contacts, query} = useLoaderData<typeof loader>();
     const navigation = useNavigation();
     // programatically execute a form submission
     const submit = useSubmit();
@@ -94,7 +92,6 @@ export default function Contacts() {
                 id="detail"
                 className={navigation.state === 'loading' && !searching ? 'loading' : ""}
             >
-                <h3>Welcome {user?.username}</h3>
                 <Outlet />
             </div>
 

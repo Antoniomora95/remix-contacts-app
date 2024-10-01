@@ -18,7 +18,6 @@ export async function login({ username, password }: { username: string, password
         return null;
     }
 
-
     const isSamePassword = await isValidPassword(password, userWithPassword.password.hash as string);
     const hasValidCredentials = (username === userWithPassword.username && isSamePassword);
 
@@ -69,7 +68,7 @@ export const requireUserId = async (request: Request, redirectTo: string) => {
     const session = await getSession(request.headers.get("Cookie"));
     const userId = session.get("userId");
     if (!userId) {
-        throw redirect(`/login`)
+        return redirect(`/login`)
     }
     return userId;
 }

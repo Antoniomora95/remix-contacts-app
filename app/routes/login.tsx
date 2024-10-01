@@ -1,12 +1,13 @@
+import { z } from "zod";
 import { ActionFunctionArgs, json } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
+import { Form, useActionData, useNavigation } from "@remix-run/react";
 import { createUserSession, login, signup } from "~/services/auth.server";
 
 type ActionData = {
-    formError?: string;
+    formErrors?: string[];
     fieldErrors?: {
-        username: string | undefined;
-        password: string | undefined;
+        username?: string[];
+        password?: string[];
     };
     fields?: {
         loginType: string;
@@ -18,60 +19,46 @@ type ActionData = {
 const badRequest = (data: ActionData) => json(data, { status: 400 });
 
 export async function action({ request }: ActionFunctionArgs) {
-
     const formData = await request.formData();
-    const username = String(formData.get("username"));
-    const password = String(formData.get("password"));
-    const loginType = String(formData.get("loginType"));
-    const fields = { username, password, loginType };
 
-    const validateUsername = (username: string) => {
-        if(typeof username !== "string" || username.length < 6) {
-            return "username must be string with length 6 at least"
-        }
+    const loginSchema = z.object({
+        username: z.string().min(6),
+        password: z.string().min(6),
+        loginType: z.enum(["login", "register"]),
+    }).strict();
+
+    const result = loginSchema.safeParse(Object.fromEntries(formData));
+
+    if (result.success === false) {
+        const formErrors = result.error?.formErrors.formErrors;
+        const fieldErrors = result.error?.formErrors.fieldErrors;
+        return badRequest({ formErrors, fieldErrors });
     }
 
-    const validatePassword = (password: string) => {
-        if(typeof password !== "string" || password.length < 6) {
-            return "password must be string with length 6 at least"
-        }
-    }
-
-    const fieldErrors = {
-        username: validateUsername(username),
-        password: validatePassword(password)
-    };
-
-    if (typeof username !== "string" || typeof password !== "string") {
-        return badRequest({formError: "username and password must be strings"})
-    }
-
-    if (Object.values(fieldErrors).find(Boolean)) {
-        return badRequest({fieldErrors, fields })
-    }
+    const { loginType, username, password } = result.data;
 
     if (loginType === "login") {
         const user = await login({ username, password });
         if (!user) {
-            return badRequest({formError: "Incorrect username or password"});
+            return badRequest({ formErrors: ["Incorrect username or password"] });
         }
-
-        return createUserSession({userId: user.id, redirectTo: '/contacts'});
+        return createUserSession({ userId: user.id, redirectTo: '/contacts' });
     } else if (loginType === "register") {
         // register the user, verify that it does not exist
-        const userCreated = await signup({username, password});
+        const userCreated = await signup({ username, password });
         if (!userCreated) {
-            return badRequest({formError: "Could not register user, contact the administrator"});
+            return badRequest({ formErrors: ["Could not register user, contact the administrator"] });
         }
-        return createUserSession({userId: userCreated.id, redirectTo: '/contacts'});
+        return createUserSession({ userId: userCreated.id, redirectTo: '/contacts' });
     }
 
-    return badRequest({formError: "Login type not allowed"})
+    return badRequest({ formErrors: ["Login type not allowed"] })
 }
 
 export default function Login() {
     const actionData = useActionData<typeof action>();
-    //const fetcher = useFetcher();
+    const navigation = useNavigation();
+    const isSubmitting = navigation.state === "submitting" || navigation.state === "loading";
 
     return (
         <Form
@@ -85,7 +72,7 @@ export default function Login() {
                     name="username"
                     aria-label="Type your username"
                 />
-                <ErrorMessage name="formError" errorMessage={actionData?.fieldErrors?.username} />
+                <ErrorMessage field="username" errorMessages={actionData?.fieldErrors?.username} />
             </label>
             <label>
                 <span style={{ marginRight: "2rem" }}>Password</span>
@@ -94,7 +81,7 @@ export default function Login() {
                     name="password"
                     aria-label="Type your password"
                 />
-                <ErrorMessage name="formError" errorMessage={actionData?.fieldErrors?.password} />
+                <ErrorMessage field="password" errorMessages={actionData?.fieldErrors?.password} />
             </label>
 
             <fieldset style={{ border: 0 }}>
@@ -123,16 +110,30 @@ export default function Login() {
             </fieldset>
 
             <div id="form-error-message">
-                <ErrorMessage name="formError" errorMessage={actionData?.formError} />
+                <ErrorMessage field="form" errorMessages={actionData?.formErrors} />
             </div>
-            <button type="submit">Submit</button>
+            <button type="submit" disabled={isSubmitting}>Submit</button>
         </Form>
     )
 }
 
-const ErrorMessage = ({ name, errorMessage }: { name: string, errorMessage?: string }) => {
+const ErrorMessage = ({ field, errorMessages }: { field: string, errorMessages?: string[] }) => {
 
-    return errorMessage ? (<p className="form-validation-error" role="alert" id={name}>{errorMessage}</p>) : null;
+    if (!errorMessages) {
+        return null
+    }
+    return errorMessages.map(error => {
+        return (
+            <p
+                id={`${field}-error`}
+                key={`${field}-${error}`}
+                className="form-validation-error"
+                role="alert"
+            >
+                {error}
+            </p>
+        )
+    })
 }
 
 
