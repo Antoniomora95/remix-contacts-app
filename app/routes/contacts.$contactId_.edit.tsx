@@ -5,7 +5,6 @@ import invariant from "tiny-invariant";
 import { getContact, updateContact } from "~/data";
 import { requireUserId } from "~/services/auth.server";
 
-
 export const loader = async ({params, request}: LoaderFunctionArgs) => {
     await requireUserId(request, "/login");
     invariant(params.contactId, "Missing contactId param");
@@ -53,7 +52,7 @@ export default function EditContact() {
                     placeholder="Last"
                     aria-label="Last name"
                     defaultValue={contact.last}
-                />                
+                />
             </p>
             <label>
                 <span>Twitter</span>
@@ -77,9 +76,9 @@ export default function EditContact() {
                     }}
                     />
                 <input
-                    type="text" 
-                    name="avatar" 
-                    placeholder="https://example.com/avatar.jpg" 
+                    type="text"
+                    name="avatar"
+                    placeholder="https://example.com/avatar.jpg"
                     aria-label="Avatar URL"
                     defaultValue={contact.avatar}
                 />

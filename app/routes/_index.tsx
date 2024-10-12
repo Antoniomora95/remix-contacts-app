@@ -1,7 +1,9 @@
-import { redirect } from "@remix-run/node";
+import { LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { requireUserId } from "~/services/auth.server";
 
 
-export const loader = async () => {
+export const loader = async (args: LoaderFunctionArgs) => {
+  await requireUserId(args.request, "/login");
   return redirect('/contacts');
 }
 export default function Index() {

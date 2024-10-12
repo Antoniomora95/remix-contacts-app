@@ -64,18 +64,18 @@ export const createUserSession = async ({ userId, redirectTo }: { userId: string
 }
 
 export const requireUserId = async (request: Request, redirectTo: string) => {
-    console.log(redirectTo, 'requireUserId');
     const session = await getSession(request.headers.get("Cookie"));
     const userId = session.get("userId");
+    console.log({redirectTo, userId}, 'requireUserId');
     if (!userId) {
-        return redirect(`/login`)
+        throw redirect(`/login`)
     }
     return userId;
 }
 
 export async function logout(request: Request) {
     const session = await getSession(request.headers.get("Cookie"));
-      return redirect("/login", {
+      throw redirect("/login", {
         headers: {
           "Set-Cookie": await destroySession(session),
         },

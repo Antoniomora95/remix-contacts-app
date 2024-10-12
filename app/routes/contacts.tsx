@@ -8,34 +8,35 @@ import {
     useNavigation,
     useSubmit
 } from "@remix-run/react";
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { ContactRecord, createEmptyContact, getContacts } from '~/data';
 import { Logout } from '~/components/logout';
 import { requireUserId } from '~/services/auth.server';
-
-export const loader = async (args: LoaderFunctionArgs) => {
-    await requireUserId(args.request, "/login");
-
-    const url = new URL(args.request.url);
-    const query = url.searchParams.get("q");
-    const contacts = await getContacts(query);
-    return json({ contacts, query });
-}
 
 export const action = async () => {
     const contact = await createEmptyContact();
     return redirect(`/contacts/${contact.id}/edit`)
 }
 
+export const loader: LoaderFunction = async (args: LoaderFunctionArgs) => {
+    await requireUserId(args.request, "/login");
+    const url = new URL(args.request.url);
+    const query = url.searchParams.get("q");
+    const contacts = await getContacts(query);
+    return json({ contacts, query });
+}
+
 export default function Contacts() {
-    const { contacts, query} = useLoaderData<typeof loader>();
+    const {contacts, query} = useLoaderData<typeof loader>();
     const navigation = useNavigation();
+
+    console.log(navigation.state, 'state navigation');
     // programatically execute a form submission
     const submit = useSubmit();
 
     /*
     When nothing is happening, navigation.location will be undefined,
-    but when the user navigates it will be populated with the next location while data loads. 
+    but when the user navigates it will be populated with the next location while data loads.
     Then we check if they're searching with location.search.
      */
 
